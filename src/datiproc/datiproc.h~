@@ -1,0 +1,11 @@
+
+#ifndef DATIPROC_H
+#define DATIPROC_H
+
+//struttura per il passaggio di informazioni dal processo figlio al processo principale
+
+struct datiproc{
+	int tipo;		//tipo di informazione
+	int valore;		//valore dell'informazione
+};
+#endif

@@ -1,0 +1,11 @@
+
+#ifndef LAVOROFIGLIO_H
+#define LAVOROFIGLIO_H
+
+//struttura dati per il passaggio di dati dal processo figlio al processo principale
+
+struct lavorofiglio{		//da inserire i campi per la comunicazione con il client
+
+	int dacambiare;
+};
+#endif

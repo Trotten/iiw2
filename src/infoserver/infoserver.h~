@@ -1,0 +1,13 @@
+
+#ifndef INFOSERVER_H
+#define INFOSERVER_H
+
+struct infoserver{
+
+	struct procinfo **procini;
+	pthread_t threadcontrollo;
+
+};
+
+
+#endif
