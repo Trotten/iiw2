@@ -18,21 +18,12 @@
 #include <signal.h>
 
 
-#define SERV_PORT   5193
-#define BACKLOG       10
 #define MAXLINE     1024
 #define NUMPROC       10
 
 #define DISP	     100
 #define POSTI        101
 
-
-#define PROCLIBERIMIN	     1
-#define PROCLIBERIMAX	     6
-#define DURATA_ATTESA	     300000
-#define THREAD_INIZIALI       5
-#define ITERAZIONI_MASSIME_THREAD 20
-#define MASSIMO_THREAD_LIBERI 100
-#define MINIMO_THREAD_LIBERI 30
+struct impostazioni *imp;
 
 #endif

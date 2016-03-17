@@ -8,85 +8,11 @@
 #include "../infoserver/infoserver.h"
 #include "../datipernuoviproc/datipernuoviproc.h"
 #include "../impostazioni/impostazioni.h"
-
-struct impostazioni *inizzializzaimp(){
-struct impostazioni *impo=malloc(sizeof(struct impostazioni));
-impo->procliberimin=1;
-impo->procliberimax=6 ;
-impo->durata_attesa=300000 ;
-impo->thread_iniziali=5 ;
-impo->iterazioni_massime_thread=20 ;
-impo->massimo_thread_liberi=100 ;
-impo->minimo_thread_liberi=30 ;
-return impo;
-}
-
-
-
-struct impostazioni *caricaimpostazioni(){
-/*
-valori per il file di impostazioni
-PROCLIBERIMIN
-PROCLIBERIMAX
-DURATA_ATTESA
-THREAD_INIZIALI
-ITERAZIONI_MASSIME_THREAD
-MASSIMO_THREAD_LIBERI
-MINIMO_THREAD_LIBERI
-
-*/
-
-
-int num=0;
-int val;
-FILE *fd;
-char buff[20];
-struct impostazioni * imp;
-imp=inizzializzaimp();
-fd=fopen("impostazioni.txt","r");
-if( fd==NULL ) {
-	printf("Si e' verificato un errore in apertura del file\n");
-	exit(1);
-}
-
-while(1)
-{
-
-	num=fscanf(fd,"%s",buff);
-	if(num==EOF)
-		break;
-
-	num=fscanf(fd,"%d",&val);
-	if(num==EOF)
-		break;
-	
-	if(strcmp("PROCLIBERIMIN",buff)==0)
-	imp->procliberimin=val;
-	if(strcmp("PROCLIBERIMAX",buff)==0)
-	imp->procliberimax=val;
-	if(strcmp("DURATA_ATTESA",buff)==0)
-	imp->durata_attesa=val;
-	if(strcmp("THREAD_INIZIALI",buff)==0)
-	imp->thread_iniziali=val;
-	if(strcmp("ITERAZIONI_MASSIME_THREAD",buff)==0)
-	imp->iterazioni_massime_thread=val;
-	if(strcmp("MASSIMO_THREAD_LIBERI",buff)==0)
-	imp->massimo_thread_liberi=val;
-	if(strcmp("MINIMO_THREAD_LIBERI",buff)==0)
-	imp->minimo_thread_liberi=val;
-}
-
-fclose(fd);
-
-return imp;
-}
-
-
+#include "../caricaimpostazioni/caricaimpostazioni.h"
 
 
 
 int inizializzaporta(){
-	
 	struct sockaddr_in    servaddr;
 	int listensd;
 
@@ -100,7 +26,8 @@ int inizializzaporta(){
 	memset((void *)&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	servaddr.sin_port = htons(SERV_PORT);
+	servaddr.sin_port = htons(imp->serv_port);
+	
 
 
 	if ((bind(listensd, (struct sockaddr *) &servaddr, sizeof(struct sockaddr_in))) < 0) {
@@ -109,7 +36,7 @@ int inizializzaporta(){
 	}
 
 
-	if (listen(listensd, BACKLOG) < 0 ) { 
+	if (listen(listensd,imp->backlog) < 0 ) { 
 		perror("errore in listen");
 		exit(1);
 	}
@@ -118,16 +45,7 @@ return listensd;
 }
 
 
-
-
-
-
-
-
-
-
-
-void *gestorenumeroprocessifiglidisponibili(void *arg){			//thread per gestire il numero di 										//processi figli contemporaneamente 										//disponibili nel sistema
+void *gestore_numero_processi_figli_disponibili(void *arg){		//thread per gestire il numero di 										//processi figli contemporaneamente 										//disponibili nel sistema
 	
 	struct datipernuoviproc *dati=arg;
 	struct procinfo **pro=dati->procini;
@@ -136,15 +54,13 @@ void *gestorenumeroprocessifiglidisponibili(void *arg){			//thread per gestire i
 	//struct procinfo *procini=*pro;
 		
 		//if(procini==NULL)
-	printf("%d\n",(int)*pro);
+
 	if(*pro==NULL)
 		//procini=aggiungiprocesso(procini,creaprocesso());	
 		*pro=aggiungiprocesso(*pro,creaprocesso(dati->listens));
-		
 
 	struct procinfo *appoggio;
 	int liberi;
-
 	if(kill(getpid(),SIGUSR1)!=0)
 		perror("kill");
 	while(1){
@@ -157,18 +73,18 @@ void *gestorenumeroprocessifiglidisponibili(void *arg){			//thread per gestire i
 				appoggio=appoggio->next;
 
 			}
-		while(liberi<PROCLIBERIMIN)
-			{
+		while(liberi<imp->procliberimin)
+			{	
 				aggiungiprocesso(*pro,creaprocesso(dati->listens));
 				liberi++;
 			}
-		while(liberi>PROCLIBERIMAX)
+		while(liberi>imp->procliberimax)
 			{
 			
 					//da inseire il controllo su tutti i processi in esecuzione ed eliminarne quelli liberi fino ad averne in esecuzione un numero < di PROCLIBERIMAX
 			}
 
-	usleep(DURATA_ATTESA);
+	usleep(imp->durata_attesa);
 	
 	}
 }
@@ -189,7 +105,6 @@ void sighandler(int segnale){
 
 struct infoserver * setup(int listen){
 	signal(SIGUSR1, sighandler);
-
 	struct infoserver *inf=malloc(sizeof(struct infoserver));
 	inf->pass=malloc(sizeof(struct datipernuoviproc));
 	inf->pass->listens=listen;
@@ -199,8 +114,7 @@ struct infoserver * setup(int listen){
 	//(*(inf->procini))->listensd=listens;
 	//struct procinfo *procini2=NULL;
 	//inf->procini=&procini2;
-
-	int err=pthread_create(&inf->threadcontrollo,NULL,gestorenumeroprocessifiglidisponibili,inf->pass);
+	int err=pthread_create(&inf->threadcontrollo,NULL,gestore_numero_processi_figli_disponibili,inf->pass);
 	if(err!=0){
 		fprintf (stderr,"Errore nel setup del server\n");
 		exit(1);

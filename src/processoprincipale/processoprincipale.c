@@ -40,7 +40,6 @@ void *attesapipefiglio(void *arg){
 	struct procinfo *data=(struct procinfo *)arg;
 	struct datiproc * datiletti= malloc(sizeof(struct datiproc));		
 	int v;
-	
 	while(1){		
 		v = read(data->pip[2], datiletti,sizeof(struct datiproc));
 		if (v == -1) {
@@ -66,7 +65,7 @@ void *attesapipefiglio(void *arg){
 
 
 
-void creathreadpergestionepipefiglio(struct procinfo *data){			//funzione per la creazione del
+void crea_thread_per_gestione_pipe_figlio(struct procinfo *data){		//funzione per la creazione del
 										//thread in ascolto sulla pipe 											//con il processo figlio
 
 	int err=pthread_create(&(data->threadread),NULL,attesapipefiglio,data);
@@ -80,7 +79,7 @@ void creathreadpergestionepipefiglio(struct procinfo *data){			//funzione per la
 
 
 
-struct procinfo * creaprocesso(int daacc){				
+struct procinfo * creaprocesso(int dati){				
 								//funzione per la creazione di un nuovo 								//processo figlio, chiusura delle pipe non 									//necessarie nel processo principale e 
 								//creazione del thread in ascolto
 	struct procinfo *procfiglio=alloc_node();
@@ -90,7 +89,7 @@ struct procinfo * creaprocesso(int daacc){
 	{
 		datifiglio->pip[i]=procfiglio->pip[i];
 	}
-	datifiglio->acceptdati=daacc;
+	datifiglio->acceptdati=dati;
 	if((procfiglio->procpid=fork())==0){ 			//creazione processo figlio
 		
 		lavproc(datifiglio);
@@ -102,8 +101,7 @@ struct procinfo * creaprocesso(int daacc){
 		perror("Close");
 	if(close(procfiglio->pip[3])!=0)
 		perror("Close");
-	printf("Padre\n");
-	creathreadpergestionepipefiglio(procfiglio);		//creazione thread in ascolto
+	crea_thread_per_gestione_pipe_figlio(procfiglio);		//creazione thread in ascolto
 	return procfiglio;
 
 }
@@ -115,18 +113,13 @@ struct procinfo * aggiungiprocesso(struct procinfo *procini,struct procinfo *new
 	if(procini==NULL)
 	{
 		return newproc;
-/*
-		procini=newproc;
-		return;	
-*/
 	}		
 		
 	struct procinfo *app=procini;
 	while(app->next!=NULL)
 		app=app->next;		
 	app->next=newproc;
-	newproc->prec=app;
-//      return;	
+	newproc->prec=app;	
 	return procini;
 }
 

@@ -1,4 +1,5 @@
 #include "../basic/basic.h"
+#include "../impostazioni/impostazioni.h"
 #include "../procinfo/procinfo.h"
 #include "../datiprocfiglio/datiprocfiglio.h"
 #include "../lavorofiglio/lavorofiglio.h"
@@ -12,11 +13,11 @@
 pthread_mutex_t mutex_numero_disponibili = PTHREAD_MUTEX_INITIALIZER;
 
 
-void incrementaconttorepadre(struct threadnumero *numerothreadprinc)
+void incrementacontatorepadre(struct threadnumero *numerothreadprinc)
 {
 
 	pthread_mutex_lock( &mutex_numero_disponibili );
-	if(numerothreadprinc->threadliberi>=MASSIMO_THREAD_LIBERI)
+	if(numerothreadprinc->threadliberi>=imp->massimo_thread_liberi)
 	{	
 		printf("ADDIO %d\n",(int)pthread_self());
 		pthread_exit(0);
@@ -29,7 +30,7 @@ void incrementaconttorepadre(struct threadnumero *numerothreadprinc)
 }
 
 
-void decrementaconttorepadre(struct threadnumero *numerothreadprinc)
+void decrementacontatorepadre(struct threadnumero *numerothreadprinc)
 {
 
 	pthread_mutex_lock( &mutex_numero_disponibili );
@@ -46,19 +47,23 @@ void *lavorothreadfigli(void *arg){
 
 	struct datiutiliaithread *datiutili=(struct datiutiliaithread *)arg;
 	int cont;
-	for(cont=0;cont<ITERAZIONI_MASSIME_THREAD;cont++){
-		incrementaconttorepadre(datiutili->numero);
+	for(cont=0;cont<imp->iterazioni_massime_thread;cont++){
+		incrementacontatorepadre(datiutili->numero);
 			
 		int connsd;
-		if ((connsd = accept(datiutili->datiaccept, (struct sockaddr *)NULL, NULL)) < 0) {
+//accept sulla porta bloccante
+		if ((connsd = accept(datiutili->datiaccept, (struct sockaddr *)NULL, NULL)) < 0) 
+		{
 			perror("errore in accept");
 			exit(1);
 		}
-		printf("accept   %d\n",(int)pthread_self());
-			//accept sulla porta bloccante
+printf("accept   %d\n",(int)pthread_self());
+			
+		decrementacontatorepadre(datiutili->numero);
 
-		sleep(1);
-		decrementaconttorepadre(datiutili->numero);
+
+//aggiungere tutta la parte di comunicazione con il cluster di server
+
 
 		char* buff="HTTP/1.1 200 OK\nContent-length: 46\nContent-Type: text/html\n\n<html><body><H1>Hello world</H1></body></html>";
 

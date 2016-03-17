@@ -10,7 +10,6 @@ struct datiprocfiglio{
 				//pipe 2	lettura processo principale
 				//pipe 3	scrittura processo figlio
 	int acceptdati;
-
-};
+	};
 
 #endif

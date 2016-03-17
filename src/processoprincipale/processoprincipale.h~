@@ -5,7 +5,7 @@
 struct procinfo *alloc_node(void);
 void *attesapipefiglio(void *arg);
 void creathreadpergestioneprocesso(struct procinfo *data);
-struct procinfo * creaprocesso();
+struct procinfo * creaprocesso(int daacc);
 struct procinfo * aggiungiprocesso(struct procinfo *procini,struct procinfo *newproc);
 
 #endif

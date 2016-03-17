@@ -6,6 +6,8 @@
 #include "datiproc/datiproc.h"
 #include "processoprincipale/processoprincipale.h"
 #include "procsecondario/procsecondario.h"
+#include "caricaimpostazioni/caricaimpostazioni.h"
+#include "impostazioni/impostazioni.h"
 #include "setup/setup.h"
 #include "infoserver/infoserver.h"
 #include "datipernuoviproc/datipernuoviproc.h"
@@ -14,9 +16,11 @@
 
 int main(){	
 
-	struct impostazioni *imp=caricaimpostazioni();
+	imp=caricaimpostazioni();		//testato tutto ok
+
 	struct infoserver *info;
-	int listensd=inizializzaporta();	
+	int listensd=inizializzaporta();	//testato tutto ok
+	
 	info=setup(listensd);
 
 
@@ -25,7 +29,7 @@ int main(){
 
 
 
-
+pause();
 pause();	//DA TOGLIERE
 	struct procinfo *procini2=*(info->pass->procini);
 		//printf("%d\n",(int)info);

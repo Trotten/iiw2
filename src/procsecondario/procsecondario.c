@@ -1,4 +1,5 @@
 #include "../basic/basic.h"
+#include "../impostazioni/impostazioni.h"
 #include "../procinfo/procinfo.h"
 #include "../datiprocfiglio/datiprocfiglio.h"
 #include "../lavorofiglio/lavorofiglio.h"
@@ -27,7 +28,6 @@ void *attesapipepadre(void *arg){
 				exit(EXIT_FAILURE);
 			}
 		printf("Thf  %d\n",datiletti->dacambiare);
-		sleep(20);
 	}
 }
 
@@ -37,12 +37,11 @@ void *gestorenumero(void *arg){
 	struct datiutiliaithread * datidapassare=(struct datiutiliaithread *)arg;
 
 	pthread_t threadsupp;
-	int err;
-	sleep(1);
-	
+	int err;	
 	while(1)
 	{
-		if(datidapassare->numero->threadliberi<MINIMO_THREAD_LIBERI)
+		usleep(imp->vel_creazione);
+		if(datidapassare->numero->threadliberi<imp->minimo_thread_liberi)
 		{
 		
 			err=pthread_create(&(threadsupp),NULL,lavorothreadfigli,datidapassare);
@@ -56,7 +55,6 @@ void *gestorenumero(void *arg){
 
 
 		}
-		usleep(100);
 	}
 
 }
@@ -81,35 +79,14 @@ void setupthreadiniziali(struct datiutiliaithread *datithread){
 	int nt;
 	pthread_t threadsupp;
 	int err;
-	for(nt=0;nt<THREAD_INIZIALI;nt++)
+	for(nt=0;nt<imp->thread_iniziali;nt++)
 	{	
 		err=pthread_create(&(threadsupp),NULL,lavorothreadfigli,datithread);
-		printf ("setup thread iniziali %d %d %d\n",nt,err,(int)threadsupp);
-	if(err!=0)
-	{
-		fprintf (stderr,"Errore nella creazione del nuovo thread\n");
-		exit(1);
-
-	}
-
-
-		//crea thread
-/*
-
-creare thread che vanno tutti in lock su di una possibile connessione
-ogni volta che un thread finisce il lavoro
-
-a) invia un segnale e si rimette in lock
-il thread principale conta quanti segnali sono stati ricevuti e aumenta un contatore usato per segnalare al processo principale i posti ancora disponibili nel processo
-
-
-b)il thread prende un lock su di una strutura del thread principale contenente il contatore di thread figli liberi per lavorare
-
-c) i thread vanno tutti in lock sulla porta per fare l'accept  il thread aggiorna il numero sul thread principale che si occuperà di gestire i thread attivi e comunicare con il processo principale
-
-
-
-*/
+		if(err!=0)
+		{
+			fprintf (stderr,"Errore nella creazione del nuovo thread\n");
+			exit(1);
+		}
 		
 	}
 	pthread_t gestorenum;
@@ -131,7 +108,6 @@ void lavproc(struct datiprocfiglio *datiproc){		//pipe 0 lettura 3 scrittura
 	
 
 	struct datiprocfiglio * info=datiproc;		//salvataggio dati passati alla creazione
-	printf("dati passati  %d\n",info->acceptdati);
 
 	if(close(info->pip[1])!=0)			//chiusura delle pipe che nn servono
 		perror("Close");
@@ -148,11 +124,11 @@ void lavproc(struct datiprocfiglio *datiproc){		//pipe 0 lettura 3 scrittura
 		//spazionumeri->threadliberi=0;
 
 	setupthreadiniziali(spaziodati);
-	
+ pause();		//DA TOGLIERE	
 	struct datiproc *nuovo=malloc(sizeof(struct datiproc));
 	nuovo->tipo=POSTI;
 	nuovo->valore=4;
- pause();		//DA TOGLIERE
+
 	printf("Figlio   %d    %d  \n",(int)getpid(),(int)readthreadp);
 	int g=write(info->pip[3],nuovo, sizeof(struct datiproc));
 	if (g == -1) {
