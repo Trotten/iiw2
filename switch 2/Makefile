@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -pthread -Wall -Wextra -O4  -g
-CSFLAGS =  -pthread -Wall -Wextra -O4 -g -DDEBUG -lm
+CFLAGS = -pthread -Wall -Wextra -O3  -g
+CSFLAGS =  -pthread -Wall -Wextra -O3 -g -DDEBUG -lm
 DIR = src
 SUB_DIRS := ${DIR}/*
 SRC = $(wildcard ${DIR}/*/*.c)
